@@ -1,5 +1,7 @@
 # paperQA
 
+[![ci](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml/badge.svg)](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml)
+
 Ask questions of scientific papers. Get answers grounded in the source, with page-level citations.
 
 ## What
