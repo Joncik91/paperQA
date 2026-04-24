@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 dependencies = [
-    # Pinned in a follow-up commit once model choice is locked.
+    "pypdf>=4,<7",
 ]
 
 [project.optional-dependencies]

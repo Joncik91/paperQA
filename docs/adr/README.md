@@ -5,6 +5,7 @@ Every non-obvious decision that shapes paperQA's design lands here as an ADR.
 ## Index
 
 - [0001 — Scope, niche, and initial model choice](0001-scope-and-model-choice.md) — accepted
+- [0002 — Chunking strategy — page-level passages](0002-chunking-strategy.md) — accepted
 
 ## How to add one
 

@@ -25,7 +25,7 @@ Pre-alpha. See [docs/adr/0001-scope-and-model-choice.md](docs/adr/0001-scope-and
 
 ## Running locally
 
-TBD — see [docs/running-locally.md](docs/running-locally.md) once implemented.
+See [docs/running-locally.md](docs/running-locally.md). Current slice: PDF → page-level `Passage` list.
 
 ## Demo
 
