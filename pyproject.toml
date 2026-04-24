@@ -22,10 +22,16 @@ classifiers = [
 ]
 
 dependencies = [
+    "numpy>=1.26,<3",
     "pypdf>=4,<7",
 ]
 
 [project.optional-dependencies]
+# Heavy ML runtime — not needed for unit tests or the Passage/Index core.
+# Install with `pip install -e ".[embed]"` when you need the real embedder.
+embed = [
+    "sentence-transformers>=3,<5",
+]
 dev = [
     "pytest>=8",
     "pytest-cov>=5",
@@ -55,3 +61,10 @@ addopts = "-ra --strict-markers"
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+# sentence-transformers ships no type stubs. It is an optional runtime
+# extra (see [project.optional-dependencies].embed), so the import-untyped
+# warning would break CI for users who don't install the extra.
+[[tool.mypy.overrides]]
+module = "sentence_transformers.*"
+ignore_missing_imports = true
