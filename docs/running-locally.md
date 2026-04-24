@@ -68,9 +68,40 @@ for c in answer.citations:
     print(f"  cited page {c.page_number} (score={c.score:.3f})")
 ```
 
-A real LLM-backed answerer is coming; it will satisfy the same `Answerer`
-protocol (see [ADR-0004](adr/0004-answering-model-and-backend.md)) and will
-be a drop-in replacement for `StubAnswerer` in the snippet above.
+## End-to-end with the real HF Inference API
+
+Requires the `llm` extra and an HF token (export `HF_TOKEN=...`):
+
+```python
+from paperqa import PassageIndex, chunk_by_page
+from paperqa.embedders import SentenceTransformerEmbedder
+from paperqa.backends.hf_inference import HFInferenceAnswerer
+
+passages = chunk_by_page("paper.pdf")
+embedder = SentenceTransformerEmbedder()
+index = PassageIndex.build(passages, embedder)
+
+hits = index.query("What is the main contribution?", embedder, top_k=4)
+answer = HFInferenceAnswerer().answer("What is the main contribution?", hits)
+
+print(answer.text)
+for c in answer.citations:
+    print(f"  cited page {c.page_number} (score={c.score:.3f})")
+```
+
+`HFInferenceAnswerer` satisfies the same `Answerer` protocol as
+`StubAnswerer` — it is a drop-in replacement (see
+[ADR-0004](adr/0004-answering-model-and-backend.md)).
+
+## Running integration tests
+
+Default `pytest` runs skip `integration`-marked tests. To exercise the real
+HF Inference API:
+
+```bash
+export HF_TOKEN=hf_...
+pytest -m integration
+```
 
 ## Regenerate test fixtures
 
