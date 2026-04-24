@@ -1,0 +1,20 @@
+[
+  {
+    "pdf_path": "../fixtures/three_pages.pdf",
+    "question": "What does the introduction say?",
+    "relevant_pages": [1],
+    "must_cite_page": 1
+  },
+  {
+    "pdf_path": "../fixtures/three_pages.pdf",
+    "question": "Describe the method section.",
+    "relevant_pages": [2],
+    "must_cite_page": 2
+  },
+  {
+    "pdf_path": "../fixtures/three_pages.pdf",
+    "question": "What is in the conclusion?",
+    "relevant_pages": [3],
+    "must_cite_page": 3
+  }
+]

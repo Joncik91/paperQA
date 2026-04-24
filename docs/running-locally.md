@@ -103,6 +103,23 @@ export HF_TOKEN=hf_...
 pytest -m integration
 ```
 
+## Running the offline measurement harness
+
+Metrics: retrieval recall@k and citation faithfulness. See
+[ADR-0005](adr/0005-evaluation-plan.md) for the rationale and the gold-set
+schema.
+
+```bash
+pip install -e ".[embed]"          # needs the real embedder
+python scripts/run_eval.py          # uses tests/eval/gold.json by default
+python scripts/run_eval.py path/to/your/gold.json
+python scripts/run_eval.py --json-only > report.json
+```
+
+Without `HF_TOKEN` set the harness uses `StubAnswerer`, which only exercises
+the retrieval + citation-plumbing path. With `HF_TOKEN` set, the real
+`HFInferenceAnswerer` runs.
+
 ## Regenerate test fixtures
 
 The committed `tests/fixtures/three_pages.pdf` is deterministic. To rebuild it:
