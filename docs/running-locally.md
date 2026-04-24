@@ -48,6 +48,30 @@ for hit in index.query("What is the main contribution?", embedder, top_k=4):
           f"{hit.passage.text[:120]}")
 ```
 
+## End-to-end with the offline stub answerer
+
+No network, no inference token — useful for local smoke tests:
+
+```python
+from paperqa import PassageIndex, StubAnswerer, chunk_by_page
+from paperqa.embedders import SentenceTransformerEmbedder
+
+passages = chunk_by_page("paper.pdf")
+embedder = SentenceTransformerEmbedder()
+index = PassageIndex.build(passages, embedder)
+
+hits = index.query("What is the main contribution?", embedder, top_k=4)
+answer = StubAnswerer().answer("What is the main contribution?", hits)
+
+print(answer.text)
+for c in answer.citations:
+    print(f"  cited page {c.page_number} (score={c.score:.3f})")
+```
+
+A real LLM-backed answerer is coming; it will satisfy the same `Answerer`
+protocol (see [ADR-0004](adr/0004-answering-model-and-backend.md)) and will
+be a drop-in replacement for `StubAnswerer` in the snippet above.
+
 ## Regenerate test fixtures
 
 The committed `tests/fixtures/three_pages.pdf` is deterministic. To rebuild it:
