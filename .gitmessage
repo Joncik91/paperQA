@@ -1,0 +1,16 @@
+# Subject: <=72 chars, imperative mood, lowercase, no trailing period.
+# Example: add page-level PDF chunker
+
+# ---- blank line above separates subject from body ----
+
+# WHAT:  One to three lines. What this commit changes, concretely.
+# WHY:   One to three lines. Why the change is needed. Cite the constraint,
+#        bug, or decision (ADR-NNNN) that motivated it.
+# WHERE: Bullet list of paths touched, with (new) / (mod) / (del) markers.
+#        Keeps reviewers oriented without running git diff.
+
+# Rules (see CONTRIBUTING.md §3):
+#   - One logical change per commit.
+#   - Docs updated in the same commit as the code they describe.
+#   - No "WIP", no "fix stuff", no emoji.
+#   - Reference ADRs when implementing one: "Implements ADR-0003."

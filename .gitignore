@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+wheels/
+.venv/
+venv/
+env/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+
+# Tooling
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+
+# IDEs / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Project artefacts
+data/
+*.pdf
+!tests/fixtures/*.pdf
+models/
+.cache/
+*.sqlite
+*.db
+
+# Env
+.env
+.env.*
+!.env.example
+
+# HF Spaces
+.gradio/

@@ -1,0 +1,14 @@
+# Architecture Decision Records
+
+Every non-obvious decision that shapes paperQA's design lands here as an ADR.
+
+## Index
+
+- [0001 — Scope, niche, and initial model choice](0001-scope-and-model-choice.md) — accepted
+
+## How to add one
+
+1. Copy `TEMPLATE.md` to `NNNN-short-title.md` (next integer, zero-padded to 4).
+2. Fill in Context, Decision, Alternatives, Consequences.
+3. Add a one-line entry to the index above in the same commit.
+4. Reference the ADR from the commit body (`Implements ADR-NNNN.`) and from code comments where the decision is load-bearing.
