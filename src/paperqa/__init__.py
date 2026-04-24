@@ -10,13 +10,16 @@ from paperqa.answering import (
 )
 from paperqa.chunking import Passage, chunk_by_page
 from paperqa.indexing import Embedder, PassageIndex, RetrievedPassage
+from paperqa.pipeline import AskResult, PaperQA
 
 __version__ = "0.0.1"
 __all__ = [
     "Answer",
     "Answerer",
+    "AskResult",
     "Citation",
     "Embedder",
+    "PaperQA",
     "Passage",
     "PassageIndex",
     "RetrievedPassage",

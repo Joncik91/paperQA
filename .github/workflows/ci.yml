@@ -32,10 +32,13 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
 
-      - name: Install project with dev extras
+      - name: Install project with all extras
+        # WHY all extras: CI must typecheck app.py (gradio-dependent) and the
+        # HF backend (huggingface-hub-dependent), so the extras need to be
+        # importable at lint/mypy time. Integration tests are still deselected.
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev,embed,llm,app]"
 
       - name: Ruff lint
         run: ruff check .
@@ -44,7 +47,7 @@ jobs:
         run: ruff format --check .
 
       - name: Mypy (strict)
-        run: mypy src/
+        run: mypy src/ app.py
 
       - name: Pytest
         run: pytest -q

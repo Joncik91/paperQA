@@ -31,7 +31,18 @@ See [docs/running-locally.md](docs/running-locally.md). Current slice: PDF → p
 
 ## Demo
 
-TBD — deployed to Hugging Face Spaces (link once live).
+Gradio app at `app.py`. Run locally:
+
+```bash
+pip install -e ".[embed,llm,app]"
+python app.py
+```
+
+Without `HF_TOKEN` set the app uses the offline `StubAnswerer` so the
+demo never hard-errors; set `HF_TOKEN` to switch to the real HF
+Inference API backend.
+
+Deploy to a Hugging Face Space: see [docs/deploying.md](docs/deploying.md).
 
 ## Contributing
 

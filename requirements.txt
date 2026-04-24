@@ -1,0 +1,20 @@
+# HF Spaces installs from this file at build time.
+#
+# WHY this file exists alongside pyproject.toml: Spaces does not read
+# pyproject optional-dependencies — it installs whatever is in
+# requirements.txt. Keep this list aligned with the [app] + [embed] + [llm]
+# extras in pyproject.toml; when a runtime dep changes there, update here
+# in the same commit.
+
+# Core
+numpy>=1.26,<3
+pypdf>=4,<7
+
+# Embedder (all-MiniLM-L6-v2)
+sentence-transformers>=3,<5
+
+# HF Inference API backend
+huggingface-hub>=0.24,<1
+
+# UI
+gradio>=4,<6

@@ -36,6 +36,10 @@ embed = [
 llm = [
     "huggingface-hub>=0.24,<1",
 ]
+# Gradio UI (HF Space entry point).  Install with `pip install -e ".[app]"`.
+app = [
+    "gradio>=4,<6",
+]
 dev = [
     "pytest>=8",
     "pytest-cov>=5",
@@ -81,4 +85,9 @@ ignore_missing_imports = true
 # huggingface_hub ships inconsistent stubs across versions; treat as untyped.
 [[tool.mypy.overrides]]
 module = "huggingface_hub.*"
+ignore_missing_imports = true
+
+# gradio does not ship stubs; treat as untyped.
+[[tool.mypy.overrides]]
+module = "gradio.*"
 ignore_missing_imports = true
