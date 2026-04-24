@@ -23,7 +23,7 @@ Model and retrieval choices are documented in [docs/adr/](docs/adr/).
 
 ## Status
 
-Pre-alpha. See [docs/adr/0001-scope-and-model-choice.md](docs/adr/0001-scope-and-model-choice.md) for current scope.
+Pre-alpha. See [docs/adr/0001-scope-and-model-choice.md](docs/adr/0001-scope-and-model-choice.md) for current scope and [docs/baselines/](docs/baselines/) for the latest measured numbers.
 
 ## Running locally
 

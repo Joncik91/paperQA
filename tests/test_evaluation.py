@@ -17,7 +17,8 @@ from paperqa.evaluation import (
 )
 
 GOLD_PATH = Path(__file__).parent / "eval" / "gold.json"
-FIXTURE = Path(__file__).parent / "fixtures" / "three_pages.pdf"
+PAPER_FIXTURE = Path(__file__).parent / "fixtures" / "attention_is_all_you_need.pdf"
+SIMPLE_FIXTURE = Path(__file__).parent / "fixtures" / "three_pages.pdf"
 
 
 class KeywordEmbedder:
@@ -60,24 +61,46 @@ def test_score_citations_counts_only_relevant() -> None:
 
 def test_load_gold_set_resolves_relative_paths() -> None:
     items = load_gold_set(GOLD_PATH)
-    assert len(items) == 3
-    # Relative ../fixtures/... resolves to the real fixture.
-    assert all(item.pdf_path == FIXTURE.resolve() for item in items)
-    assert items[0].must_cite_page == 1
-    assert items[1].relevant_pages == frozenset({2})
+    # All questions point at the committed Attention Is All You Need PDF.
+    assert len(items) >= 3
+    assert all(item.pdf_path == PAPER_FIXTURE.resolve() for item in items)
+    # must_cite_page must be part of relevant_pages — guard against gold
+    # drift where the two fields get out of sync.
+    for item in items:
+        assert item.must_cite_page in item.relevant_pages
 
 
-def test_run_report_over_gold_set() -> None:
-    # Use a KeywordEmbedder tuned to the fixture's section titles so we
-    # can predict which page each question retrieves first.
+def test_run_report_on_inline_gold_with_keyword_embedder() -> None:
+    # WHY inline gold: keeps this test hermetic and decoupled from the
+    # committed gold.json, so evolving the real gold set does not break
+    # the harness's unit tests.
     embedder = KeywordEmbedder(["introduction", "method", "conclusion"])
     qa = PaperQA(embedder=embedder, answerer=StubAnswerer(), top_k=3)
 
-    report = run_report(qa, load_gold_set(GOLD_PATH))
+    inline_gold = [
+        GoldItem(
+            pdf_path=SIMPLE_FIXTURE,
+            question="Tell me about the introduction.",
+            relevant_pages=frozenset({1}),
+            must_cite_page=1,
+        ),
+        GoldItem(
+            pdf_path=SIMPLE_FIXTURE,
+            question="Describe the method section.",
+            relevant_pages=frozenset({2}),
+            must_cite_page=2,
+        ),
+        GoldItem(
+            pdf_path=SIMPLE_FIXTURE,
+            question="What does the conclusion say?",
+            relevant_pages=frozenset({3}),
+            must_cite_page=3,
+        ),
+    ]
+
+    report = run_report(qa, inline_gold)
 
     assert report.n_questions == 3
-    # With this embedder and the stub answerer, every question's top hit
-    # is the gold-relevant page, so every metric should be 1.0.
     assert report.mean_recall_at_1 == 1.0
     assert report.mean_recall_at_3 == 1.0
     assert report.mean_citation_faithfulness == 1.0
@@ -97,7 +120,7 @@ def test_run_report_penalises_hallucinated_citations() -> None:
     # Force-cite a page that is retrieved but NOT in the gold relevant set.
     gold = [
         GoldItem(
-            pdf_path=FIXTURE,
+            pdf_path=SIMPLE_FIXTURE,
             question="Describe the method section.",
             relevant_pages=frozenset({2}),
             must_cite_page=2,

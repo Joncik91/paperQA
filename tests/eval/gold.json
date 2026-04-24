@@ -1,20 +1,38 @@
 [
   {
-    "pdf_path": "../fixtures/three_pages.pdf",
-    "question": "What does the introduction say?",
-    "relevant_pages": [1],
-    "must_cite_page": 1
-  },
-  {
-    "pdf_path": "../fixtures/three_pages.pdf",
-    "question": "Describe the method section.",
+    "pdf_path": "../fixtures/attention_is_all_you_need.pdf",
+    "question": "What problem with recurrent networks does the introduction motivate the Transformer to solve?",
     "relevant_pages": [2],
     "must_cite_page": 2
   },
   {
-    "pdf_path": "../fixtures/three_pages.pdf",
-    "question": "What is in the conclusion?",
+    "pdf_path": "../fixtures/attention_is_all_you_need.pdf",
+    "question": "Describe the overall Transformer model architecture: what components make up the encoder and decoder stacks?",
     "relevant_pages": [3],
     "must_cite_page": 3
+  },
+  {
+    "pdf_path": "../fixtures/attention_is_all_you_need.pdf",
+    "question": "How is Scaled Dot-Product Attention computed, and why is the dot-product scaled?",
+    "relevant_pages": [4],
+    "must_cite_page": 4
+  },
+  {
+    "pdf_path": "../fixtures/attention_is_all_you_need.pdf",
+    "question": "What is Multi-Head Attention and why is it used instead of a single attention function?",
+    "relevant_pages": [4, 5],
+    "must_cite_page": 5
+  },
+  {
+    "pdf_path": "../fixtures/attention_is_all_you_need.pdf",
+    "question": "What BLEU scores does the Transformer achieve on English-to-German and English-to-French translation?",
+    "relevant_pages": [8],
+    "must_cite_page": 8
+  },
+  {
+    "pdf_path": "../fixtures/attention_is_all_you_need.pdf",
+    "question": "What does the ablation in Table 3 tell us about the effect of changing the number of attention heads?",
+    "relevant_pages": [9],
+    "must_cite_page": 9
   }
 ]
