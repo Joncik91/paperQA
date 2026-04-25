@@ -6,6 +6,12 @@
 # extras in pyproject.toml; when a runtime dep changes there, update here
 # in the same commit.
 
+# Install our own package from the source tree so `from paperqa import ...`
+# works in app.py. This is the standard HF Spaces pattern when the Space
+# imports a local package — without it the build "succeeds" but app.py
+# crashes at startup with ModuleNotFoundError.
+.
+
 # Core
 numpy>=1.26,<3
 pypdf>=4,<7

@@ -23,13 +23,35 @@ paperQA's public demo runs as a Gradio Space. This runbook is the source of trut
    git remote add space https://huggingface.co/spaces/<your-username>/paperqa
    ```
 
-3. First push:
+3. **First push — orphan branch (HF rejects PDF binaries from regular git).**
+
+   Hugging Face's pre-receive hook rejects any binary file (e.g. our 2.2 MB `tests/fixtures/attention_is_all_you_need.pdf`) from a regular git push, even at small sizes. Two ways forward:
+
+   1. Migrate the PDF to LFS — adds a hard `git-lfs` clone-time dep for both remotes. Rejected.
+   2. Push only the **runtime** tree (no `tests/`) on a fresh orphan branch. Adopted.
+
+   Procedure (re-run from `main` every time the Space needs an update):
 
    ```bash
-   git push space main
+   git checkout --orphan space-deploy
+   git rm -rf --cached .
+   rm -rf tests/                                   # tests are not runtime
+   git add app.py requirements.txt README.md LICENSE \
+           .gitattributes .gitignore pyproject.toml src/ docs/
+   git commit -m "deploy: paperQA Space runtime tree"
+
+   # Use a write-scope HF token. Inline-in-URL keeps the token out of
+   # `git config` (where a credential helper would otherwise persist it).
+   git push -f "https://<user>:${HF_WRITE_TOKEN}@huggingface.co/spaces/<user>/paperqa" \
+     space-deploy:main
+
+   git checkout main
+   git branch -D space-deploy                      # disposable
    ```
 
-   HF builds the Space, installs `requirements.txt`, and runs `app.py`. Cold builds take 3–5 minutes on a CPU basic Space.
+   Burn the token after the push if it was a one-shot.
+
+   Cold builds on CPU basic take 3–5 minutes (downloads sentence-transformers on first run).
 
 ## Configuring the Inference API backend
 
@@ -52,13 +74,7 @@ The CPU Space and the GPU Space can coexist as separate Spaces — the same GitH
 
 ## Updating a live Space
 
-Any code change merged to `main` on GitHub:
-
-```bash
-git push space main
-```
-
-That is the whole flow. There is no CI for the Space build itself — GitHub Actions run against GitHub, and the Space builds on push to the Space remote.
+Re-run the orphan-branch procedure above. There is no CI for the Space build itself — GitHub Actions run against GitHub, and the Space builds on each force-push to its `main`. Worth scripting once we update more than once a week.
 
 ## Frontmatter and gradio version
 
