@@ -11,6 +11,7 @@ Every non-obvious decision that shapes paperQA's design lands here as an ADR.
 - [0005 — Evaluation plan](0005-evaluation-plan.md) — accepted
 - [0006 — Visual retrieval — ColPali behind a Retriever abstraction](0006-visual-retrieval-colpali.md) — accepted
 - [0007 — Per-citation grounding check (post-hoc)](0007-citation-grounding-check.md) — accepted
+- [0008 — Multi-document support (pooled index, file-prefixed citations)](0008-multi-document-support.md) — accepted
 
 ## How to add one
 
