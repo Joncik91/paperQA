@@ -40,9 +40,11 @@ paperQA's public demo runs as a Gradio Space. This runbook is the source of trut
    # untouched and there is no risk of an accidental commit on main.
    git worktree add --orphan -b space-deploy /tmp/paperqa-deploy
 
-   # Stage only runtime files (no tests/, no scripts/, no .github/).
+   # Stage only runtime files (no tests/, no scripts/, no .github/, no
+   # docs/ — the README's screenshot in docs/ is a binary HF would also
+   # reject, and the Space app does not read from docs/ at runtime).
    cp -r {app.py,requirements.txt,README.md,LICENSE,.gitattributes,\
-.gitignore,pyproject.toml,paperqa,docs} /tmp/paperqa-deploy/
+.gitignore,pyproject.toml,paperqa} /tmp/paperqa-deploy/
    git -C /tmp/paperqa-deploy add -A
    git -C /tmp/paperqa-deploy commit -m "deploy: paperQA Space runtime tree"
 
