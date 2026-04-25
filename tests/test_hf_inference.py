@@ -84,7 +84,7 @@ def test_real_inference_call_if_token_available() -> None:
         _hit(1, "The paper proposes a new attention mechanism called flash attention."),
         _hit(2, "Training used 8 A100 GPUs for two days."),
     ]
-    answerer = HFInferenceAnswerer(token=token, max_new_tokens=64)
+    answerer = HFInferenceAnswerer(token=token, max_tokens=64)
     answer = answerer.answer("What does the paper propose?", passages)
 
     # Minimal smoke assertions — the real API is not deterministic.
