@@ -23,35 +23,48 @@ paperQA's public demo runs as a Gradio Space. This runbook is the source of trut
    git remote add space https://huggingface.co/spaces/<your-username>/paperqa
    ```
 
-3. **First push — orphan branch (HF rejects PDF binaries from regular git).**
+3. **First push — orphan worktree (HF rejects PDF binaries from regular git).**
 
    Hugging Face's pre-receive hook rejects any binary file (e.g. our 2.2 MB `tests/fixtures/attention_is_all_you_need.pdf`) from a regular git push, even at small sizes. Two ways forward:
 
    1. Migrate the PDF to LFS — adds a hard `git-lfs` clone-time dep for both remotes. Rejected.
-   2. Push only the **runtime** tree (no `tests/`) on a fresh orphan branch. Adopted.
+   2. Push only the **runtime** tree (no `tests/`) on a fresh orphan branch in an isolated worktree. Adopted.
 
    Procedure (re-run from `main` every time the Space needs an update):
 
    ```bash
-   git checkout --orphan space-deploy
-   git rm -rf --cached .
-   rm -rf tests/                                   # tests are not runtime
-   git add app.py requirements.txt README.md LICENSE \
-           .gitattributes .gitignore pyproject.toml src/ docs/
-   git commit -m "deploy: paperQA Space runtime tree"
+   # Throw away any stale deploy branch first.
+   git branch -D space-deploy 2>/dev/null
+
+   # Build the orphan in a separate worktree so the main checkout is
+   # untouched and there is no risk of an accidental commit on main.
+   git worktree add --orphan -b space-deploy /tmp/paperqa-deploy
+
+   # Stage only runtime files (no tests/, no scripts/, no .github/).
+   cp -r {app.py,requirements.txt,README.md,LICENSE,.gitattributes,\
+.gitignore,pyproject.toml,paperqa,docs} /tmp/paperqa-deploy/
+   git -C /tmp/paperqa-deploy add -A
+   git -C /tmp/paperqa-deploy commit -m "deploy: paperQA Space runtime tree"
 
    # Use a write-scope HF token. Inline-in-URL keeps the token out of
    # `git config` (where a credential helper would otherwise persist it).
-   git push -f "https://<user>:${HF_WRITE_TOKEN}@huggingface.co/spaces/<user>/paperqa" \
+   git -C /tmp/paperqa-deploy push -f \
+     "https://<user>:${HF_WRITE_TOKEN}@huggingface.co/spaces/<user>/paperqa" \
      space-deploy:main
 
-   git checkout main
-   git branch -D space-deploy                      # disposable
+   # Clean up.
+   git worktree remove /tmp/paperqa-deploy
+   git branch -D space-deploy
    ```
 
    Burn the token after the push if it was a one-shot.
 
    Cold builds on CPU basic take 3–5 minutes (downloads sentence-transformers on first run).
+
+   **Common build failures** (caught on the live Space, fixed in `main`):
+
+   - `ModuleNotFoundError: No module named 'paperqa'` → the source layout used `src/paperqa/`. Fixed by flattening to `paperqa/` at the repo root so `python app.py` finds the package via cwd-on-sys.path.
+   - `ERROR: Directory '.' is not installable` → an earlier `requirements.txt` had `.` to install the local package; HF mounts requirements.txt at `/tmp/`, so `.` resolves to the wrong directory. The flat-layout fix above made the `.` line unnecessary.
 
 ## Configuring the Inference API backend
 

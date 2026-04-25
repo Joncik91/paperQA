@@ -56,7 +56,17 @@ class HFInferenceAnswerer:
                 citations=(),
             )
         prompt = build_prompt(question, passages)
-        text = self._generate(prompt)
+        try:
+            text = self._generate(prompt)
+        except Exception as exc:
+            # WHY catch broadly: HF Inference can throw 429 (rate limit),
+            # 503 (cold model), 401 (bad/missing token), or transient
+            # network errors. Any of those bubbling as an unhandled
+            # exception makes Gradio silently freeze — much worse UX than
+            # a visible "the API said no" message. The error text is
+            # surfaced as the answer; parse_citations on it returns no
+            # citations, which is what we want.
+            text = _format_api_error(exc, self._model)
         return Answer(text=text, citations=parse_citations(text, passages))
 
     def _generate(self, prompt: str) -> str:
@@ -75,3 +85,32 @@ class HFInferenceAnswerer:
         )
         content = response.choices[0].message.content
         return str(content) if content is not None else ""
+
+
+def _format_api_error(exc: Exception, model: str) -> str:
+    """Convert an Inference-API exception into a UI-friendly answer string.
+
+    WHY in-place messages, not raised: the answering layer's contract is
+    "return an Answer". Raising would route the failure into Gradio's
+    generic error popup, which on free CPU Spaces sometimes just freezes
+    the button. A typed answer string keeps the UX legible.
+    """
+    msg = str(exc)
+    if "429" in msg or "Too Many Requests" in msg:
+        return (
+            f"The HF Inference API rate-limited the request to `{model}`. "
+            "Free-tier serverless quotas are tight; wait a minute and try "
+            "again, or switch to a less-busy model."
+        )
+    if "401" in msg or "Unauthorized" in msg:
+        return (
+            "The HF Inference API rejected the token (401). The Space's "
+            "`HF_TOKEN` secret is missing, expired, or scoped wrong."
+        )
+    if "503" in msg or "loading" in msg.lower():
+        return (
+            f"The HF Inference API reports `{model}` is still loading "
+            "(503). Wait ~30 s and retry — first call after a cold start "
+            "always pays this hit."
+        )
+    return f"The HF Inference API returned an error: {msg[:300]}"

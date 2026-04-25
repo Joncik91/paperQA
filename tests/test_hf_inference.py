@@ -43,6 +43,43 @@ def test_empty_passages_short_circuit(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "cannot answer" in answer.text.lower()
 
 
+def test_api_errors_become_readable_answers(monkeypatch: pytest.MonkeyPatch) -> None:
+    # WHY: an unhandled exception silently freezes the Gradio button on the
+    # live Space. The contract is "always return an Answer" — error info
+    # goes in .text with zero citations.
+    def boom(self: HFInferenceAnswerer, prompt: str) -> str:
+        raise RuntimeError("429 Client Error: Too Many Requests for url: ...")
+
+    monkeypatch.setattr(HFInferenceAnswerer, "_generate", boom)
+
+    answer = HFInferenceAnswerer(token="fake").answer("q?", [_hit(1, "x")])
+
+    assert answer.citations == ()
+    assert "rate-limited" in answer.text.lower()
+
+
+def test_unauthorized_error_is_recognised(monkeypatch: pytest.MonkeyPatch) -> None:
+    def boom(self: HFInferenceAnswerer, prompt: str) -> str:
+        raise RuntimeError("401 Client Error: Unauthorized")
+
+    monkeypatch.setattr(HFInferenceAnswerer, "_generate", boom)
+    answer = HFInferenceAnswerer(token="fake").answer("q?", [_hit(1, "x")])
+
+    assert "401" in answer.text or "token" in answer.text.lower()
+    assert answer.citations == ()
+
+
+def test_loading_error_is_recognised(monkeypatch: pytest.MonkeyPatch) -> None:
+    def boom(self: HFInferenceAnswerer, prompt: str) -> str:
+        raise RuntimeError("503 Service Unavailable: Model is currently loading")
+
+    monkeypatch.setattr(HFInferenceAnswerer, "_generate", boom)
+    answer = HFInferenceAnswerer(token="fake").answer("q?", [_hit(1, "x")])
+
+    assert "503" in answer.text or "loading" in answer.text.lower()
+    assert answer.citations == ()
+
+
 def test_parses_citations_from_generated_text(monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_generate(self: HFInferenceAnswerer, prompt: str) -> str:
         # Real prompt is passed in; return a stock answer that cites a valid
