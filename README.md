@@ -8,7 +8,7 @@ sdk_version: "6.13.0"
 app_file: app.py
 pinned: false
 license: mit
-short_description: Document QA across one or many scientific papers, with page-level citations.
+short_description: Multi-paper QA with page-level citations.
 ---
 
 # paperQA
