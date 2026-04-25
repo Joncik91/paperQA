@@ -40,6 +40,14 @@ llm = [
 app = [
     "gradio>=4,<6",
 ]
+# Visual retrieval (ColPali). Heavy + GPU-only at runtime. Install with
+# `pip install -e ".[visual]"`.  The torch dep is intentionally NOT pinned
+# here — ColPali pulls it transitively, and pinning it would conflict
+# with whatever torch the deploy target's GPU drivers expect.
+visual = [
+    "colpali-engine>=0.3,<0.4",
+    "pypdfium2>=4,<5",
+]
 dev = [
     "pytest>=8",
     "pytest-cov>=5",
@@ -90,4 +98,10 @@ ignore_missing_imports = true
 # gradio does not ship stubs; treat as untyped.
 [[tool.mypy.overrides]]
 module = "gradio.*"
+ignore_missing_imports = true
+
+# colpali-engine, pypdfium2, PIL: optional [visual] runtime deps with no
+# stubs. Treat as untyped so CI without [visual] still type-checks.
+[[tool.mypy.overrides]]
+module = ["colpali_engine.*", "pypdfium2.*", "PIL.*", "torch.*"]
 ignore_missing_imports = true

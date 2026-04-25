@@ -59,6 +59,24 @@ HF builds the Space, installs `requirements.txt`, and runs `app.py`. Cold builds
 
 If the token is wrong or rate-limited, the app still renders but generation fails. The UX path for that is handled in `app.py` (the Inference call throws → Gradio surfaces the traceback). Tightening that error path is tracked as a follow-up.
 
+## Switching to ColPali (paid GPU Space)
+
+Per [ADR-0006](adr/0006-visual-retrieval-colpali.md), the visual retriever
+needs a GPU. To deploy the ColPali path:
+
+1. Create the Space on **GPU hardware** (T4 small minimum) — set this in
+   **Settings → Hardware** before the first build.
+2. In **Settings → Variables and secrets**, add `PAPERQA_RETRIEVER=colpali`
+   as a (non-secret) variable.
+3. Add `colpali-engine>=0.3,<0.4` and `pypdfium2>=4,<5` to
+   `requirements.txt` on the Space (these are *not* in the default
+   `requirements.txt` because the free CPU Space cannot use them).
+4. Restart the Space. First load downloads ~6 GB of weights; expect a
+   long cold start.
+
+The CPU Space and the GPU Space can coexist as separate Spaces — the same
+GitHub repo backs both, with the deploy variant chosen by env var.
+
 ## Updating a live Space
 
 Any code change merged to `main` on GitHub:

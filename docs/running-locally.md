@@ -103,6 +103,20 @@ export HF_TOKEN=hf_...
 pytest -m integration
 ```
 
+## Switching retrievers
+
+Default is the text-dense MiniLM retriever. To opt into the visual ColPali
+retriever (requires `[visual]` extra and a GPU; downloads ~6 GB on first
+use):
+
+```bash
+pip install -e ".[visual]"
+PAPERQA_RETRIEVER=colpali python app.py
+```
+
+The Gradio status line shows the active retriever so you can verify the
+right path is wired.
+
 ## Running the offline measurement harness
 
 Metrics: retrieval recall@k and citation faithfulness. See

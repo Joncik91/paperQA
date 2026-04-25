@@ -17,9 +17,11 @@ from typing import cast
 
 import gradio as gr
 
-from paperqa import AskResult, PaperQA, StubAnswerer
+from paperqa import AskResult, PaperQA, Passage, StubAnswerer
 from paperqa.answering import Answerer
 from paperqa.embedders import SentenceTransformerEmbedder
+from paperqa.pipeline import RetrieverFactory
+from paperqa.retrieval import DenseRetriever, Retriever
 
 
 def _build_answerer() -> tuple[Answerer, str]:
@@ -33,8 +35,32 @@ def _build_answerer() -> tuple[Answerer, str]:
         # Lazy import keeps the HF SDK out of the import path when missing.
         from paperqa.backends.hf_inference import HFInferenceAnswerer
 
-        return HFInferenceAnswerer(), "Backend: HF Inference API (Llama-3.1-8B-Instruct)"
-    return StubAnswerer(), "Backend: offline stub (set HF_TOKEN for real answers)"
+        return HFInferenceAnswerer(), "Answerer: HF Inference API (Llama-3.1-8B-Instruct)"
+    return StubAnswerer(), "Answerer: offline stub (set HF_TOKEN for real answers)"
+
+
+def _build_retriever_factory() -> tuple[RetrieverFactory, str]:
+    """Pick the retriever per `PAPERQA_RETRIEVER` env (default: dense MiniLM).
+
+    WHY env-driven (not auto-detect): ColPali requires a GPU and downloads
+    a 6 GB model on first use. Visitors of the free CPU Space must opt
+    into that explicitly — the default has to stay free-tier-runnable.
+    """
+    choice = (os.environ.get("PAPERQA_RETRIEVER") or "dense").lower()
+    if choice == "colpali":
+        from paperqa.retrievers.colpali import ColPaliRetriever
+
+        def factory(pdf: Path, passages: list[Passage]) -> Retriever:
+            return ColPaliRetriever(pdf_path=pdf, passages=passages)
+
+        return factory, "Retriever: ColPali v1.3 (visual)"
+
+    embedder = SentenceTransformerEmbedder()
+
+    def dense_factory(_pdf: Path, passages: list[Passage]) -> Retriever:
+        return DenseRetriever(passages, embedder)
+
+    return dense_factory, "Retriever: MiniLM dense (text)"
 
 
 def _format_result(result: AskResult) -> tuple[str, str]:
@@ -59,9 +85,10 @@ def _format_result(result: AskResult) -> tuple[str, str]:
 
 
 def main() -> gr.Blocks:
-    embedder = SentenceTransformerEmbedder()
-    answerer, backend_status = _build_answerer()
-    qa = PaperQA.with_embedder(embedder, answerer=answerer, top_k=4)
+    retriever_factory, retriever_status = _build_retriever_factory()
+    answerer, answerer_status = _build_answerer()
+    qa = PaperQA(retriever_factory=retriever_factory, answerer=answerer, top_k=4)
+    backend_status = f"{retriever_status} · {answerer_status}"
 
     def ask(pdf_file: str | None, question: str) -> tuple[str, str]:
         if not pdf_file:
