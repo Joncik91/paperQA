@@ -38,7 +38,7 @@ llm = [
 ]
 # Gradio UI (HF Space entry point).  Install with `pip install -e ".[app]"`.
 app = [
-    "gradio>=4,<6",
+    "gradio>=5,<7",
 ]
 # Visual retrieval (ColPali). Heavy + GPU-only at runtime. Install with
 # `pip install -e ".[visual]"`.  The torch dep is intentionally NOT pinned

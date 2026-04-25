@@ -16,5 +16,5 @@ sentence-transformers>=3,<5
 # HF Inference API backend
 huggingface-hub>=0.24,<1
 
-# UI
-gradio>=4,<6
+# UI — pinned range matches sdk_version in README.md frontmatter.
+gradio>=5,<7
