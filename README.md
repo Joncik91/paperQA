@@ -20,6 +20,8 @@ short_description: Document QA for scientific papers with page-level citations.
 
 > 👉 **[Try the live demo](https://huggingface.co/spaces/Joncik/paperqa)** — upload any arXiv-style paper, ask a question, see the cited pages side-by-side.
 
+![paperQA demo: asking the Attention Is All You Need paper for its BLEU scores; the answer cites page 8 and the page 8 excerpt is rendered next to it for verification.](docs/screenshot.png)
+
 ## What it does
 
 Upload a paper. Type a question. Get back an answer that:
