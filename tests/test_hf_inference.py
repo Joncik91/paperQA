@@ -84,11 +84,19 @@ def test_parses_citations_from_generated_text(monkeypatch: pytest.MonkeyPatch) -
     def fake_generate(self: HFInferenceAnswerer, prompt: str) -> str:
         # Real prompt is passed in; return a stock answer that cites a valid
         # page and a fake page to prove the hallucination filter works.
-        return "The method is attention [page 1]. Ignore [page 99]."
+        # Sentence content overlaps with page 1's passage ("Transformer
+        # architecture attention") so the ADR-0007 grounding check leaves
+        # the [page 1] marker in place; [page 99] survives the grounding
+        # check (page not retrieved -> no annotation) and is then dropped
+        # by parse_citations.
+        return "The Transformer architecture uses attention [page 1]. Ignore [page 99]."
 
     monkeypatch.setattr(HFInferenceAnswerer, "_generate", fake_generate)
 
-    passages = [_hit(1, "Transformer architecture."), _hit(2, "Training details.")]
+    passages = [
+        _hit(1, "Transformer architecture uses attention layers."),
+        _hit(2, "Training details."),
+    ]
     answerer = HFInferenceAnswerer(token="fake")
 
     answer = answerer.answer("What is the method?", passages)

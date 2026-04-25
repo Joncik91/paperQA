@@ -47,10 +47,10 @@ Measured on the included [`tests/eval/gold.json`](tests/eval/gold.json) gold set
 | --- | --- | --- |
 | **mean recall@3** | **0.833** | The retriever puts the right page in the top 3 on 5/6 questions |
 | **mean recall@1** | 0.583 | Top-1 is less reliable — that's why default `top_k = 4` |
-| **mean citation faithfulness** | **0.833** | Cited pages overlap the gold-relevant set |
-| **must-cite rate** | **0.667** | Cited pages match the *exact* gold page (4/6 questions) — see baselines for the trade-off |
+| **mean citation faithfulness** | **0.917** | Cited pages overlap the gold-relevant set on 5.5/6 questions |
+| **must-cite rate** | **0.833** | Cited pages match the *exact* gold page (5/6 questions) |
 
-Full per-question breakdown and the prompt-iteration story are at [`docs/baselines/`](docs/baselines/).
+The path to those numbers is documented as a series of baselines in [`docs/baselines/`](docs/baselines/) — every architectural change ships with the measured delta it produced.
 
 ## How it works
 

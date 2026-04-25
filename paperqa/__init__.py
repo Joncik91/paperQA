@@ -9,6 +9,7 @@ from paperqa.answering import (
     parse_citations,
 )
 from paperqa.chunking import Passage, chunk_by_page
+from paperqa.citation_check import verify_citations
 from paperqa.evaluation import (
     EvalReport,
     GoldItem,
@@ -44,4 +45,5 @@ __all__ = [
     "load_gold_set",
     "parse_citations",
     "run_report",
+    "verify_citations",
 ]

@@ -19,6 +19,7 @@ from __future__ import annotations
 import os
 
 from paperqa.answering import Answer, build_prompt, parse_citations
+from paperqa.citation_check import verify_citations
 from paperqa.indexing import RetrievedPassage
 
 __all__ = ["DEFAULT_MODEL", "HFInferenceAnswerer"]
@@ -67,6 +68,10 @@ class HFInferenceAnswerer:
             # surfaced as the answer; parse_citations on it returns no
             # citations, which is what we want.
             text = _format_api_error(exc, self._model)
+        # ADR-0007: post-hoc grounding check. Strips citations whose
+        # cited page does not actually contain the cited fact's
+        # distinctive tokens (numbers especially).
+        text = verify_citations(text, passages)
         return Answer(text=text, citations=parse_citations(text, passages))
 
     def _generate(self, prompt: str) -> str:
