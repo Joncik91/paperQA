@@ -47,10 +47,10 @@ Measured on the included [`tests/eval/gold.json`](tests/eval/gold.json) gold set
 | --- | --- | --- |
 | **mean recall@3** | **0.833** | The retriever puts the right page in the top 3 on 5/6 questions |
 | **mean recall@1** | 0.583 | Top-1 is less reliable — that's why default `top_k = 4` |
-| **mean citation faithfulness** | **1.000** | Every citation Llama emits is on a gold-relevant page |
-| **must-cite rate** | 0.333 | Strict gold-set metric (single allowed page per question; relaxing this is tracked) |
+| **mean citation faithfulness** | **0.833** | Cited pages overlap the gold-relevant set |
+| **must-cite rate** | **0.667** | Cited pages match the *exact* gold page (4/6 questions) — see baselines for the trade-off |
 
-Full detail and the per-question breakdown are at [`docs/baselines/2026-04-25-real-llm-baseline.md`](docs/baselines/2026-04-25-real-llm-baseline.md).
+Full per-question breakdown and the prompt-iteration story are at [`docs/baselines/`](docs/baselines/).
 
 ## How it works
 

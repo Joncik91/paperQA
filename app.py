@@ -122,10 +122,29 @@ def main() -> gr.Blocks:
                 answer_output = gr.Markdown(label="Answer")
                 sources_output = gr.Markdown(label="Retrieved pages")
 
+        # WHY chain two clicks: the first call returns immediately and only
+        # updates the UI to the "thinking" state (button disabled, answer
+        # panel shows a spinner-style message). The second call runs the
+        # actual ask() and re-enables the button when done. Without this,
+        # the user clicks Ask, the LLM call takes 5-8 seconds, and the UI
+        # gives no feedback — the entire reason for adding this.
         submit.click(
+            lambda: (
+                gr.update(value="Ask", interactive=False),
+                "⏳ Retrieving passages and asking the model… "
+                "(first request after a cold start can take 20+ seconds)",
+                "",
+            ),
+            inputs=None,
+            outputs=[submit, answer_output, sources_output],
+        ).then(
             ask,
             inputs=[pdf_input, question_input],
             outputs=[answer_output, sources_output],
+        ).then(
+            lambda: gr.update(value="Ask", interactive=True),
+            inputs=None,
+            outputs=submit,
         )
 
     # WHY cast: gradio ships no type stubs so `gr.Blocks()` narrows to Any.
