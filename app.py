@@ -64,11 +64,16 @@ def _build_retriever_factory() -> tuple[RetrieverFactory, str]:
 
 
 def _format_result(result: AskResult) -> tuple[str, str]:
-    """Render `AskResult` into (answer_markdown, sources_markdown)."""
+    """Render `AskResult` into (answer_markdown, sources_markdown).
+
+    Citation rendering carries the source filename so multi-doc results
+    are unambiguous (ADR-0008). Single-doc results show the same shape
+    — `paper.pdf p.4` — for consistency.
+    """
     answer_md = result.answer.text
     if result.answer.citations:
-        unique_pages = sorted({c.page_number for c in result.answer.citations})
-        answer_md += "\n\n**Cited pages:** " + ", ".join(f"p.{p}" for p in unique_pages)
+        cited = sorted({(c.source_path.name, c.page_number) for c in result.answer.citations})
+        answer_md += "\n\n**Cited:** " + ", ".join(f"{f} p.{p}" for f, p in cited)
 
     if not result.retrieved:
         return answer_md, "_No passages retrieved._"
@@ -79,7 +84,8 @@ def _format_result(result: AskResult) -> tuple[str, str]:
         if len(excerpt) > 600:
             excerpt = excerpt[:600] + "…"
         blocks.append(
-            f"### Page {hit.passage.page_number}  \n_score = {hit.score:.3f}_\n\n{excerpt}"
+            f"### {hit.passage.source_path.name} — page {hit.passage.page_number}  \n"
+            f"_score = {hit.score:.3f}_\n\n{excerpt}"
         )
     return answer_md, "\n\n---\n\n".join(blocks)
 
@@ -90,26 +96,33 @@ def main() -> gr.Blocks:
     qa = PaperQA(retriever_factory=retriever_factory, answerer=answerer, top_k=4)
     backend_status = f"{retriever_status} · {answerer_status}"
 
-    def ask(pdf_file: str | None, question: str) -> tuple[str, str]:
-        if not pdf_file:
-            return "Upload a PDF first.", ""
+    def ask(
+        pdf_files: list[str] | str | None,
+        question: str,
+    ) -> tuple[str, str]:
+        # Gradio's File widget returns either a single path or a list of
+        # paths depending on file_count; normalise both.
+        if not pdf_files:
+            return "Upload one or more PDFs first.", ""
         if not question.strip():
-            return "Ask a question about the uploaded paper.", ""
-        result = qa.ask(Path(pdf_file), question)
+            return "Ask a question about the uploaded paper(s).", ""
+        paths = [Path(pdf_files)] if isinstance(pdf_files, str) else [Path(p) for p in pdf_files]
+        result = qa.ask(paths, question)
         return _format_result(result)
 
     with gr.Blocks(title="paperQA", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             "# paperQA\n\n"
-            "Ask questions of a scientific PDF. Every answer cites the "
-            "page it came from.\n\n"
+            "Ask questions of one or more scientific PDFs. Every answer "
+            "cites the file and page it came from.\n\n"
             f"_{backend_status}_"
         )
         with gr.Row():
             with gr.Column(scale=1):
                 pdf_input = gr.File(
-                    label="PDF",
+                    label="PDF(s) — drop one or many",
                     file_types=[".pdf"],
+                    file_count="multiple",
                     type="filepath",
                 )
                 question_input = gr.Textbox(

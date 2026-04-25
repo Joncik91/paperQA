@@ -8,7 +8,7 @@ sdk_version: "6.13.0"
 app_file: app.py
 pinned: false
 license: mit
-short_description: Document QA for scientific papers with page-level citations.
+short_description: Document QA across one or many scientific papers, with page-level citations.
 ---
 
 # paperQA
@@ -16,30 +16,32 @@ short_description: Document QA for scientific papers with page-level citations.
 [![ci](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml/badge.svg)](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml)
 [![demo](https://img.shields.io/badge/🤗-Live%20demo-FFD21F)](https://huggingface.co/spaces/Joncik/paperqa)
 
-**Ask questions of a scientific PDF. Get answers grounded in the source, with the exact page they came from.**
+**Ask questions of one or more scientific PDFs. Get answers grounded in the source, with the exact file and page they came from.**
 
-> 👉 **[Try the live demo](https://huggingface.co/spaces/Joncik/paperqa)** — upload any arXiv-style paper, ask a question, see the cited pages side-by-side.
+> 👉 **[Try the live demo](https://huggingface.co/spaces/Joncik/paperqa)** — upload one paper or several, ask a question, see the cited pages side-by-side.
 
 ![paperQA demo: asking the Attention Is All You Need paper for its BLEU scores; the answer cites page 8 and the page 8 excerpt is rendered next to it for verification.](docs/screenshot.png)
 
 ## What it does
 
-Upload a paper. Type a question. Get back an answer that:
+Upload one or more papers. Type a question. Get back an answer that:
 
-- cites the **exact page** it came from (`[page 8]`),
+- cites the **exact file and page** it came from (`[paper.pdf, page 8]`),
 - shows the **source passage** beside the answer so you can verify it,
-- never invents page numbers — citations are filtered against retrieved pages first, then against the gold set during measurement.
+- pools all uploaded PDFs into one normalized retrieval space so cross-document scores are directly comparable (see [ADR-0008](docs/adr/0008-multi-document-support.md)),
+- never invents page numbers — citations are filtered against retrieved passages first, then through a numerical-anchor grounding check (see [ADR-0007](docs/adr/0007-citation-grounding-check.md)).
 
-The system is specialised for arXiv-style scientific PDFs. The same pipeline works on any PDF, but the prompts and the included gold set are tuned for academic papers.
+The system is tuned for arXiv-style scientific PDFs. The same pipeline works on any PDF, but the prompts and the included gold set are calibrated for academic papers.
 
 ## Why it's different from a generic RAG demo
 
 Most "chat with your PDF" demos stop at "model returns text." This project's portfolio claim is the engineering around the model:
 
 - **Page-level citation grain** is a design decision, not an afterthought (see [ADR-0002](docs/adr/0002-chunking-strategy.md)). Every passage **is** a page; faithful citations follow by construction.
-- **Pluggable backends.** `Answerer` and `Retriever` are protocols, not classes — the offline `StubAnswerer` (CI), `HFInferenceAnswerer` (live demo), and the visual `ColPaliRetriever` (planned GPU Space) all satisfy the same contract.
+- **Pluggable backends.** `Answerer` and `Retriever` are protocols, not classes — the offline `StubAnswerer` (CI), `HFInferenceAnswerer` (live demo), and the visual `ColPaliRetriever` (CPU-only path implemented; GPU baseline parked) all satisfy the same contract.
+- **Multi-document mode.** Pooled-index design ([ADR-0008](docs/adr/0008-multi-document-support.md)) means upload set is one cosine-comparable space, not N independently-normalized indexes. Single-doc behaviour is identical to before.
 - **Measurement, not vibes.** [`docs/baselines/`](docs/baselines/) ships real numbers — every architecture change ships next to a recall@k / faithfulness delta. See [`docs/adr/0005-evaluation-plan.md`](docs/adr/0005-evaluation-plan.md).
-- **Mature CI.** Lint + format + strict mypy + 41 unit tests on every push, across Python 3.11 and 3.12. Integration tests are gated behind `pytest -m integration` so the network never enters CI.
+- **Mature CI.** Lint + format + strict mypy + 60 unit tests on every push, across Python 3.11 and 3.12. Integration tests are gated behind `pytest -m integration` so the network never enters CI.
 
 ## Headline numbers (Attention Is All You Need, 6 questions)
 
@@ -56,13 +58,15 @@ The path to those numbers is documented as a series of baselines in [`docs/basel
 
 ## How it works
 
-1. **Ingest** — `pypdf` extracts one `Passage` per PDF page.
-2. **Index** — pages are embedded with `all-MiniLM-L6-v2`; the index is an in-memory NumPy matrix (per [ADR-0003](docs/adr/0003-embeddings-and-retrieval.md), no vector DB needed for single-paper QA).
-3. **Retrieve** — the question is embedded and scored against the page matrix; top-k pages are returned.
-4. **Answer** — the question + retrieved passages go to `Llama-3.1-8B-Instruct` via the HF Inference API. The system prompt forces the model to cite `[page N]` and refuse out-of-document questions.
-5. **Cite** — emitted `[page N]` markers are parsed back, filtered against the retrieved set (no hallucinated page numbers), and rendered next to the source passages.
+1. **Ingest** — `pypdf` extracts one `Passage` per PDF page; multiple uploaded PDFs are pooled into one passage list.
+2. **Index** — pages are embedded with `all-MiniLM-L6-v2`; the index is an in-memory NumPy matrix (per [ADR-0003](docs/adr/0003-embeddings-and-retrieval.md), no vector DB needed at this corpus size).
+3. **Retrieve** — the question is embedded and scored against the pooled page matrix; top-k pages are returned with their source filename and page number attached.
+4. **Answer** — the question + retrieved passages go to `Qwen2.5-7B-Instruct` via the HF Inference API. The system prompt forces the model to cite `[<file>, page N]` and refuse out-of-document questions.
+5. **Cite** — emitted `[<file>, page N]` markers are parsed back, filtered against the retrieved set (no hallucinated references), then run through a numerical-anchor grounding check: if the answer states a number, that number must appear on the cited page or the citation is dropped with a visible annotation.
 
-The visual-retrieval path (ColPali, [ADR-0006](docs/adr/0006-visual-retrieval-colpali.md)) targets the one measured failure case: questions about **table-heavy pages** where text extraction loses the signal. It's gated behind a `[visual]` extra and a `PAPERQA_RETRIEVER=colpali` env switch — only relevant on a GPU Space.
+### ColPali (visual retrieval) — implemented, baseline parked
+
+The visual-retrieval path (ColPali, [ADR-0006](docs/adr/0006-visual-retrieval-colpali.md)) targets the one measured failure case: questions about **table-heavy pages** where pypdf text extraction loses the signal (e.g. the Table 3 ablation question in the gold set, where `recall@k = 0` for every k). The implementation is in `paperqa/retrievers/colpali.py`, fully unit-tested with mocks, and gated behind a `[visual]` extra plus `PAPERQA_RETRIEVER=colpali`. **The end-to-end GPU baseline is parked** pending hardware access — DigitalOcean GPU droplets need a $250 pre-pay, HF GPU Spaces are paid, and Colab's GPU runtimes don't expose a stable URL for a Space deploy. The path is wired so a future GPU run is one `git push` away.
 
 ## Architectural decisions
 
@@ -74,6 +78,8 @@ The interesting calls are recorded as ADRs, not buried in commits:
 - [ADR-0004 — Answering model and inference backend](docs/adr/0004-answering-model-and-backend.md)
 - [ADR-0005 — Evaluation plan](docs/adr/0005-evaluation-plan.md)
 - [ADR-0006 — Visual retrieval: ColPali behind a Retriever abstraction](docs/adr/0006-visual-retrieval-colpali.md)
+- [ADR-0007 — Per-citation grounding check (post-hoc)](docs/adr/0007-citation-grounding-check.md)
+- [ADR-0008 — Multi-document support: pooled index, file-prefixed citations](docs/adr/0008-multi-document-support.md)
 
 ## Running locally
 
