@@ -60,7 +60,7 @@ Homepage = "https://github.com/jounes/paperQA"
 Issues = "https://github.com/jounes/paperQA/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/paperqa"]
+packages = ["paperqa"]
 
 [tool.ruff]
 line-length = 100

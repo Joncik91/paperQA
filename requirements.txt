@@ -6,11 +6,10 @@
 # extras in pyproject.toml; when a runtime dep changes there, update here
 # in the same commit.
 
-# Install our own package from the source tree so `from paperqa import ...`
-# works in app.py. This is the standard HF Spaces pattern when the Space
-# imports a local package — without it the build "succeeds" but app.py
-# crashes at startup with ModuleNotFoundError.
-.
+# Note: paperqa/ lives at the repo root (not src/paperqa/), so it lands on
+# sys.path automatically when the Space runs `python app.py` from /app.
+# No "pip install ." needed — and HF's Dockerfile mounts requirements.txt
+# at /tmp anyway, which would resolve "." to the wrong directory.
 
 # Core
 numpy>=1.26,<3

@@ -47,7 +47,7 @@ jobs:
         run: ruff format --check .
 
       - name: Mypy (strict)
-        run: mypy src/ app.py scripts/run_eval.py
+        run: mypy paperqa/ app.py scripts/run_eval.py
 
       - name: Pytest
         run: pytest -q
