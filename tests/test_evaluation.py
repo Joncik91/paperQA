@@ -75,7 +75,7 @@ def test_run_report_on_inline_gold_with_keyword_embedder() -> None:
     # committed gold.json, so evolving the real gold set does not break
     # the harness's unit tests.
     embedder = KeywordEmbedder(["introduction", "method", "conclusion"])
-    qa = PaperQA(embedder=embedder, answerer=StubAnswerer(), top_k=3)
+    qa = PaperQA.with_embedder(embedder, answerer=StubAnswerer(), top_k=3)
 
     inline_gold = [
         GoldItem(
@@ -108,7 +108,7 @@ def test_run_report_on_inline_gold_with_keyword_embedder() -> None:
 
 
 def test_run_report_handles_empty_gold() -> None:
-    qa = PaperQA(embedder=KeywordEmbedder(["anything"]))
+    qa = PaperQA.with_embedder(KeywordEmbedder(["anything"]))
     report = run_report(qa, gold=[])
 
     assert report.n_questions == 0
@@ -129,7 +129,7 @@ def test_run_report_penalises_hallucinated_citations() -> None:
     # KeywordEmbedder with only "introduction" puts page 1 first — so the
     # stub will cite page 1, which is NOT in the gold set for this question.
     embedder = KeywordEmbedder(["introduction"])
-    qa = PaperQA(embedder=embedder, answerer=StubAnswerer(), top_k=1)
+    qa = PaperQA.with_embedder(embedder, answerer=StubAnswerer(), top_k=1)
 
     report = run_report(qa, gold)
 

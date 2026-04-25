@@ -61,7 +61,7 @@ def _format_result(result: AskResult) -> tuple[str, str]:
 def main() -> gr.Blocks:
     embedder = SentenceTransformerEmbedder()
     answerer, backend_status = _build_answerer()
-    qa = PaperQA(embedder=embedder, answerer=answerer, top_k=4)
+    qa = PaperQA.with_embedder(embedder, answerer=answerer, top_k=4)
 
     def ask(pdf_file: str | None, question: str) -> tuple[str, str]:
         if not pdf_file:

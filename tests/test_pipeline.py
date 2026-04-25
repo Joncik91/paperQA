@@ -34,7 +34,7 @@ class KeywordEmbedder:
 
 def test_ask_returns_answer_and_retrieved_passages() -> None:
     embedder = KeywordEmbedder(["introduction", "method", "conclusion"])
-    qa = PaperQA(embedder=embedder, answerer=StubAnswerer(), top_k=2)
+    qa = PaperQA.with_embedder(embedder, answerer=StubAnswerer(), top_k=2)
 
     result = qa.ask(FIXTURE, "Tell me about the method.")
 
@@ -59,7 +59,7 @@ def test_index_is_cached_per_pdf(monkeypatch) -> None:  # type: ignore[no-untype
 
     monkeypatch.setattr(pipeline_mod, "chunk_by_page", counting)
 
-    qa = PaperQA(embedder=KeywordEmbedder(["anything"]))
+    qa = PaperQA.with_embedder(KeywordEmbedder(["anything"]))
     qa.ask(FIXTURE, "q1")
     qa.ask(FIXTURE, "q2")
     qa.ask(FIXTURE, "q3")
@@ -68,8 +68,8 @@ def test_index_is_cached_per_pdf(monkeypatch) -> None:  # type: ignore[no-untype
 
 
 def test_forget_drops_cache() -> None:
-    qa = PaperQA(embedder=KeywordEmbedder(["a"]))
+    qa = PaperQA.with_embedder(KeywordEmbedder(["a"]))
     qa.ask(FIXTURE, "first")
-    assert len(qa._index_cache) == 1
+    assert len(qa._retriever_cache) == 1
     qa.forget(FIXTURE)
-    assert qa._index_cache == {}
+    assert qa._retriever_cache == {}

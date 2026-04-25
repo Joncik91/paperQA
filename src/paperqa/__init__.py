@@ -17,7 +17,8 @@ from paperqa.evaluation import (
     run_report,
 )
 from paperqa.indexing import Embedder, PassageIndex, RetrievedPassage
-from paperqa.pipeline import AskResult, PaperQA
+from paperqa.pipeline import AskResult, PaperQA, RetrieverFactory
+from paperqa.retrieval import DenseRetriever, Retriever
 
 __version__ = "0.0.1"
 __all__ = [
@@ -25,6 +26,7 @@ __all__ = [
     "Answerer",
     "AskResult",
     "Citation",
+    "DenseRetriever",
     "Embedder",
     "EvalReport",
     "GoldItem",
@@ -33,6 +35,8 @@ __all__ = [
     "PassageIndex",
     "QuestionScore",
     "RetrievedPassage",
+    "Retriever",
+    "RetrieverFactory",
     "StubAnswerer",
     "__version__",
     "build_prompt",

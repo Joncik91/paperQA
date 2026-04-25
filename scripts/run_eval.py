@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    qa = PaperQA(embedder=SentenceTransformerEmbedder(), answerer=_pick_answerer())
+    qa = PaperQA.with_embedder(SentenceTransformerEmbedder(), answerer=_pick_answerer())
     report = run_report(qa, load_gold_set(args.gold))
 
     if not args.json_only:
