@@ -11,3 +11,4 @@ can be compared apples-to-apples.
 - [2026-04-25 — real-LLM baseline (Llama-3.1-8B-Instruct via HF Inference)](2026-04-25-real-llm-baseline.md)
 - [2026-04-25 — sharpened prompt (must-cite +0.333, faithfulness −0.167)](2026-04-25-sharpened-prompt.md)
 - [2026-04-25 — + grounding check (must-cite 0.833, faithfulness 0.917)](2026-04-25-grounding-check.md)
+- [2026-04-25 — + Qwen2.5-7B (must-cite 0.833, faithfulness **1.000**) ✨ current default](2026-04-25-qwen.md)

@@ -41,13 +41,13 @@ Most "chat with your PDF" demos stop at "model returns text." This project's por
 
 ## Headline numbers (Attention Is All You Need, 6 questions)
 
-Measured on the included [`tests/eval/gold.json`](tests/eval/gold.json) gold set, with `Llama-3.1-8B-Instruct` as the answerer:
+Measured on the included [`tests/eval/gold.json`](tests/eval/gold.json) gold set, with `Qwen2.5-7B-Instruct` as the answerer:
 
 | Metric | Value | What it means |
 | --- | --- | --- |
 | **mean recall@3** | **0.833** | The retriever puts the right page in the top 3 on 5/6 questions |
 | **mean recall@1** | 0.583 | Top-1 is less reliable — that's why default `top_k = 4` |
-| **mean citation faithfulness** | **0.917** | Cited pages overlap the gold-relevant set on 5.5/6 questions |
+| **mean citation faithfulness** | **1.000** | Every emitted citation lands on a gold-relevant page |
 | **must-cite rate** | **0.833** | Cited pages match the *exact* gold page (5/6 questions) |
 
 The path to those numbers is documented as a series of baselines in [`docs/baselines/`](docs/baselines/) — every architectural change ships with the measured delta it produced.

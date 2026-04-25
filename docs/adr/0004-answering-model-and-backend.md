@@ -16,7 +16,9 @@ Forces:
 
 ## Decision
 
-1. **Default backend:** Hugging Face Inference API. Model choice is a runtime parameter; `meta-llama/Llama-3.1-8B-Instruct` (or the HF-hosted successor when it deprecates) is the v1 default. The caller provides a token via `HF_TOKEN` env var.
+1. **Default backend:** Hugging Face Inference API. Model choice is a runtime parameter; `Qwen/Qwen2.5-7B-Instruct` is the v1 default. The caller provides a token via `HF_TOKEN` env var.
+
+   **Model-default amendment (2026-04-25):** the original choice was `meta-llama/Llama-3.1-8B-Instruct`. In practice the HF Inference API routes Llama-3.1 through the `novita` provider, which 429s and 504s heavily on free-tier quotas — verified live on the deployed Space. Qwen2.5-7B routes through `together` (a different rate-limit pool) and consistently responds in <1 s. Quality on the project's gold set is at parity for grounded QA — the citation-grounding check from ADR-0007 is doing the heavy lifting on output quality, not the choice between two strong 7-8B instruct models. The model name is still a runtime parameter, so callers who prefer Llama can pass `model="meta-llama/Llama-3.1-8B-Instruct"` to `HFInferenceAnswerer`.
 2. **Abstraction:** an `Answerer` protocol with a single method, `answer(question: str, passages: list[RetrievedPassage]) -> Answer`. Concrete implementations live in `paperqa.answering` (or submodules under it).
 3. **Fallback for tests and offline runs:** a `StubAnswerer` that returns a deterministic echo of the highest-ranked passage with its page citation. Lives in-package and is the only answerer exercised in CI.
 4. **Prompt contract:** the prompt template is built by a pure function `build_prompt(question, passages)` that interleaves passages with `[page N]` markers. The model is instructed to answer only from the provided passages and to cite `[page N]` inline. Same function is reused by every backend.

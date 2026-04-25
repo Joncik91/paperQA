@@ -28,7 +28,15 @@ __all__ = ["DEFAULT_MODEL", "HFInferenceAnswerer"]
 # v1 default model. Swapping it is a runtime parameter; if the default
 # itself changes, bump ADR-0004 in the same commit because the choice is
 # part of the reproducibility contract.
-DEFAULT_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+#
+# Why Qwen2.5-7B over Llama-3.1-8B (changed 2026-04-25): the HF Inference
+# API routes Llama-3.1 through novita, which 429s and 504s heavily on
+# free-tier quotas. Qwen2.5 routes through together (different provider,
+# separate rate-limit pool) and consistently responds in <1s. Quality on
+# our gold set is at parity for grounded QA — the citation grounding
+# check (ADR-0007) is doing the heavy lifting on output quality, not the
+# choice between two strong 7-8B instruct models.
+DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 
 # Generation budget per answer. Keeps the UX snappy on free-tier inference
 # and caps runaway outputs. Tune only with a concrete reason.

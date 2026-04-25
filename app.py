@@ -35,7 +35,7 @@ def _build_answerer() -> tuple[Answerer, str]:
         # Lazy import keeps the HF SDK out of the import path when missing.
         from paperqa.backends.hf_inference import HFInferenceAnswerer
 
-        return HFInferenceAnswerer(), "Answerer: HF Inference API (Llama-3.1-8B-Instruct)"
+        return HFInferenceAnswerer(), "Answerer: HF Inference API (Qwen2.5-7B-Instruct)"
     return StubAnswerer(), "Answerer: offline stub (set HF_TOKEN for real answers)"
 
 
