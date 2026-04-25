@@ -1,6 +1,20 @@
+---
+title: paperQA
+emoji: 📄
+colorFrom: blue
+colorTo: indigo
+sdk: gradio
+sdk_version: "5.50.0"
+app_file: app.py
+pinned: false
+license: mit
+short_description: Document QA for scientific papers with page-level citations.
+---
+
 # paperQA
 
 [![ci](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml/badge.svg)](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml)
+[![demo](https://img.shields.io/badge/🤗-Live%20demo-FFD21F)](https://huggingface.co/spaces/Joncik/paperqa)
 
 Ask questions of scientific papers. Get answers grounded in the source, with page-level citations.
 
