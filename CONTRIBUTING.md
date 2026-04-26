@@ -88,18 +88,54 @@ A commit with code changes and no matching doc changes will be rejected in revie
 
 - New logic ships with tests. Bug fixes ship with a regression test that fails before the fix.
 - `pytest` must pass locally before commit. CI enforces the same.
-- Tests live under `tests/` mirroring `src/paperqa/` structure.
+- Tests live under `tests/` mirroring `paperqa/` structure.
 
 ---
 
 ## 6. Tooling
 
 - `ruff check . && ruff format .` before commit.
-- `mypy src/` must pass (strict mode).
+- `mypy paperqa/ app.py scripts/run_eval.py` must pass (strict mode).
 - Python ≥ 3.11.
 
 ---
 
-## 7. Pull requests
+## 7. Working with optional ML deps
+
+Three lessons learned the hard way (paperQA's HF Inference work + the
+sister `zeroshot-detect` repo's OWLv2 deploy):
+
+1. **`transformers`'s `Auto*` classes ship partial type stubs.**
+   `from_pretrained` is annotated as untyped on stricter envs (latest
+   `transformers` on Python 3.11 / 3.12); my older local
+   `transformers` was silent. Strategy: scope the suppression
+   per-call with `# type: ignore[no-untyped-call]` rather than
+   silencing module-wide. Mypy strict CI catches this; mypy locally
+   may not. Verify against the same `transformers` version CI uses
+   before declaring victory.
+
+2. **Every transitive runtime dep must be declared in
+   `requirements.txt`** (and in the matching pyproject extra).
+   Modern `transformers` no longer pulls torch (you must declare
+   your framework) and no longer pulls scipy (only certain image
+   processors need it). Local dev environments usually have these
+   from prior installs; HF Spaces' clean container does not.
+   Dropping a deploy on Spaces with a hidden transitive dep gives
+   you `ModuleNotFoundError` at first inference, not at install.
+
+3. **A real local inference run must produce ≥1 detection / answer**
+   before claiming the integration works. A real-but-empty result
+   (synthetic input → zero matches) skips half the post-processor's
+   validation and lets shape bugs slip through. Use a real input
+   (`tests/fixtures/attention_is_all_you_need.pdf` for paperQA;
+   any photo of a real object for zeroshot-detect) and assert ≥1
+   non-trivial output.
+
+These are codified in the integration tests (gated behind the
+`integration` pytest marker) so they're rerunnable on demand.
+
+---
+
+## 8. Pull requests
 
 Not applicable while this is a solo repo. When opened to contributors, the PR description mirrors the commit body format: WHAT, WHY, WHERE.
