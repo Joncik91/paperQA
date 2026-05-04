@@ -15,6 +15,12 @@ short_description: Multi-paper QA with page-level citations.
 
 [![ci](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml/badge.svg)](https://github.com/Joncik91/paperQA/actions/workflows/ci.yml)
 [![demo](https://img.shields.io/badge/🤗-Live%20demo-FFD21F)](https://huggingface.co/spaces/Joncik/paperqa)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%20·%203.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-E8954A.svg)](LICENSE)
+[![mypy strict](https://img.shields.io/badge/mypy-strict-1f5582)](https://mypy.readthedocs.io/en/stable/)
+[![pytest](https://img.shields.io/badge/pytest-60%20unit%20%2B%20integration-0A9EDC?logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![ADRs](https://img.shields.io/badge/ADRs-8-E8954A)](docs/adr/)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-E8954A.svg)](CONTRIBUTING.md)
 
 **Ask questions of one or more scientific PDFs. Get answers grounded in the source, with the exact file and page they came from.**
 
@@ -22,7 +28,19 @@ short_description: Multi-paper QA with page-level citations.
 
 ![paperQA demo: asking the Attention Is All You Need paper for its BLEU scores; the answer cites page 8 and the page 8 excerpt is rendered next to it for verification.](docs/screenshot.png)
 
-## What it does
+## Table of Contents
+
+- [What It Does](#what-it-does)
+- [Why It's Different From a Generic RAG Demo](#why-its-different-from-a-generic-rag-demo)
+- [Headline Numbers (Attention Is All You Need, 6 questions)](#headline-numbers-attention-is-all-you-need-6-questions)
+- [How It Works](#how-it-works)
+- [Architectural Decisions](#architectural-decisions)
+- [Running Locally](#running-locally)
+- [Engineering Rules](#engineering-rules)
+- [Security](#security)
+- [License](#license)
+
+## What It Does
 
 Upload one or more papers. Type a question. Get back an answer that:
 
@@ -33,7 +51,7 @@ Upload one or more papers. Type a question. Get back an answer that:
 
 The system is tuned for arXiv-style scientific PDFs. The same pipeline works on any PDF, but the prompts and the included gold set are calibrated for academic papers.
 
-## Why it's different from a generic RAG demo
+## Why It's Different From a Generic RAG Demo
 
 Most "chat with your PDF" demos stop at "model returns text." This project's portfolio claim is the engineering around the model:
 
@@ -43,7 +61,7 @@ Most "chat with your PDF" demos stop at "model returns text." This project's por
 - **Measurement, not vibes.** [`docs/baselines/`](docs/baselines/) ships real numbers — every architecture change ships next to a recall@k / faithfulness delta. See [`docs/adr/0005-evaluation-plan.md`](docs/adr/0005-evaluation-plan.md).
 - **Mature CI.** Lint + format + strict mypy + 60 unit tests on every push, across Python 3.11 and 3.12. Integration tests are gated behind `pytest -m integration` so the network never enters CI.
 
-## Headline numbers (Attention Is All You Need, 6 questions)
+## Headline Numbers (Attention Is All You Need, 6 questions)
 
 Measured on the included [`tests/eval/gold.json`](tests/eval/gold.json) gold set, with `Qwen2.5-7B-Instruct` as the answerer:
 
@@ -56,7 +74,7 @@ Measured on the included [`tests/eval/gold.json`](tests/eval/gold.json) gold set
 
 The path to those numbers is documented as a series of baselines in [`docs/baselines/`](docs/baselines/) — every architectural change ships with the measured delta it produced.
 
-## How it works
+## How It Works
 
 1. **Ingest** — `pypdf` extracts one `Passage` per PDF page; multiple uploaded PDFs are pooled into one passage list.
 2. **Index** — pages are embedded with `all-MiniLM-L6-v2`; the index is an in-memory NumPy matrix (per [ADR-0003](docs/adr/0003-embeddings-and-retrieval.md), no vector DB needed at this corpus size).
@@ -68,7 +86,7 @@ The path to those numbers is documented as a series of baselines in [`docs/basel
 
 The visual-retrieval path (ColPali, [ADR-0006](docs/adr/0006-visual-retrieval-colpali.md)) targets the one measured failure case: questions about **table-heavy pages** where pypdf text extraction loses the signal (e.g. the Table 3 ablation question in the gold set, where `recall@k = 0` for every k). The implementation is in `paperqa/retrievers/colpali.py`, fully unit-tested with mocks, and gated behind a `[visual]` extra plus `PAPERQA_RETRIEVER=colpali`. **The end-to-end GPU baseline is parked** pending hardware access — DigitalOcean GPU droplets need a $250 pre-pay, HF GPU Spaces are paid, and Colab's GPU runtimes don't expose a stable URL for a Space deploy. The path is wired so a future GPU run is one `git push` away.
 
-## Architectural decisions
+## Architectural Decisions
 
 The interesting calls are recorded as ADRs, not buried in commits:
 
@@ -81,7 +99,7 @@ The interesting calls are recorded as ADRs, not buried in commits:
 - [ADR-0007 — Per-citation grounding check (post-hoc)](docs/adr/0007-citation-grounding-check.md)
 - [ADR-0008 — Multi-document support: pooled index, file-prefixed citations](docs/adr/0008-multi-document-support.md)
 
-## Running locally
+## Running Locally
 
 ```bash
 git clone https://github.com/Joncik91/paperQA.git
@@ -95,7 +113,7 @@ Set `HF_TOKEN` to use the real Inference API; without it the app falls back to t
 
 Full guide: [`docs/running-locally.md`](docs/running-locally.md). Deploying to a Space: [`docs/deploying.md`](docs/deploying.md).
 
-## Engineering rules
+## Engineering Rules
 
 This is also a portfolio piece, so the discipline is part of the product. The hard rules are codified in [`CONTRIBUTING.md`](CONTRIBUTING.md):
 
@@ -104,6 +122,25 @@ This is also a portfolio piece, so the discipline is part of the product. The ha
 - **Commit messages** are WHAT changed, WHY it changed, WHERE it landed. One logical change per commit.
 - **Documentation lands in the same commit as the code it describes.** No "I'll write the docs later."
 
+## Security
+
+Two paths leave your machine when you run paperQA:
+
+1. **The HF Inference API call.** When `HF_TOKEN` is set, the question
+   *plus the retrieved passages from the uploaded PDFs* are sent to
+   Hugging Face's inference endpoint for `Qwen2.5-7B-Instruct`. That
+   means snippets of your uploaded paper(s) leave the machine on every
+   answered question. Without `HF_TOKEN`, the app falls back to the
+   offline `StubAnswerer` and nothing leaves the machine.
+2. **The model download (one-time).** First retrieval downloads
+   `all-MiniLM-L6-v2` weights (~90 MB) from the Hugging Face Hub.
+   Read-only; nothing of yours is uploaded.
+
+For proprietary or unpublished papers, run locally without `HF_TOKEN`
+(stub answers, no network), or swap the answerer for a self-hosted
+endpoint. The `Answerer` protocol is what makes that a one-line change
+— see [ADR-0004](docs/adr/0004-answering-model-and-backend.md).
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT © Joncik91. See [LICENSE](LICENSE).
